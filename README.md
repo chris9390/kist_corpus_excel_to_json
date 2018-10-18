@@ -33,12 +33,27 @@
                    
                     "semantic_tagged": "일정 등록해줘",
                     "speaker": "User",
-                    "target_bio": "B",
                     "text": "일정 등록해줘",
                     "text_spaced": "일정 등록해줘",
                     "topic": "SCHEDULE",
                     "turn_index": "1"
-                },
+                }
+                ...
             ]
         }
+    ...
     ]
+  
+## Ontology JSON 포맷
+    {
+        'date': [
+            '오늘',
+            '내일',
+            '모레'
+        ],
+        'time': [
+            ...
+        ]
+    ...
+    }
+      
