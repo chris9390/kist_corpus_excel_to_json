@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from openpyxl import load_workbook, Workbook
-from dialogue import *
+from openpyxl import load_workbook
+#from dialogue import *
 import json
 import re
 
@@ -71,132 +71,143 @@ def convert2dict(session):
     return session_dict
 
 
+# ======================================================================================================================
+# ======================================================================================================================
+# ======================================================================================================================
+# ======================================================================================================================
+
+
+# 여기 부터가 메인코드
 if __name__ == '__main__':
-    # file = 'domain/schedule/schedule_corpus_20180911.xlsx'
-    file = 'export.xlsx'
-    # file = 'modify_excel_script/export.xlsx'
+
+    sheet_list = ['소개', '정보 문의', '요청', '알림', '일정 문의', '대답', '대화']
+
+    file = './excel/치매케어_사용자발화문_20181018_v3.xlsx'
     wb = load_workbook(filename=file)
-    # sheet = wb.get_sheet_by_name('Sheet1')
-    sheet = wb.get_sheet_by_name('Schedule Corpus')
+
     exception_lines = []
 
     sessions = []
     session = None
     init_state = True
 
-    for i in range(2, 25290):
+
+    result_json_list = []
+
+
+    # 시트 순서대로 읽어들인다.
+    for sheet_name in sheet_list:
+
+        #sheet = wb.get_sheet_by_name(sheet_name)
+        sheet = wb[sheet_name]
+
         # read cells from excel
-        not_all_none = False
-        session_id = cell_value(i, 0)
-        turn_index = cell_value(i, 1)
-        topic = cell_value(i, 2)
-        target_bio = cell_value(i, 3)
-        speaker = cell_value(i, 4)
-        description = cell_value(i, 5)
-        semantic_tagged = cell_value(i, 6)
-        act = cell_value(i, 7)
-        slot = cell_value(i, 8)
-        value = cell_value(i, 9)
-        goal_label = cell_value(i, 10)
-        method = cell_value(i, 11)
-        requested = cell_value(i, 12)
-
-        if target_bio is not None and speaker is not None and turn_index is None: # turn_index 체크
-            print('exception turn_index, line: %d' % i)
-            print(session_id, turn_index, description)
-
-        if topic is not None: # target_bio 체크
-            if target_bio not in ('B', 'I', 'O'):
-                print('exception target_bio, line: %d' % i)
-
-        if target_bio is not None: # target_bio와 topic이 같이 존재하는지 체크
-            if topic is None:
-                print('exception target_bio, line: %d' % i)
+        for row in range(3, 25290):
+            unit_dict = {}
+            utters_dict = {}
+            dialog_acts_dict = {}
 
 
-        if not not_all_none:
-            # all cells are None (this is session separator)
-            if session is not None:
-                sessions += [session]
-                session = None
+            num = cell_value(row, 0)
+            user_speech = cell_value(row, 1)
+            intention = cell_value(row, 2)
+            topic = cell_value(row, 3)
+            dialog_act = cell_value(row, 4)
+            slot = cell_value(row, 5)
+            value = cell_value(row, 6)
 
-            init_state = True
+            # 비어있는 행이면
+            if num == None and user_speech == None and intention == None and topic == None and dialog_act == None and slot == None and value == None:
+                end_of_sheet = 1
+                temp = row + 1
+                # 빈행으로 부터 20줄 정도가 모두 빈행인지 확인
+                while temp < row + 20:
+                    if cell_value(temp, 1) != None:
+                        end_of_sheet = 0
+                    temp += 1
 
-            continue
+                # 시트 끝까지 다 읽었으면 다음 시트로
+                if end_of_sheet == 1:
+                    break
+                # 비어있는 행이기 때문에 다음 행으로
+                continue
 
-        try:
-            if turn_index is not None:
-                if int(turn_index) == 1:
-                    if session_id is not None and not init_state:
-                        print('error line: %d' % i)
+            # slot-value 쌍이 2개 이상 나오는 형태
+            elif num == None and user_speech == None and intention == None and topic == None and dialog_act == None and slot != None and value != None:
+                dialog_acts_dict['act'] = pre_dialog_act
+                dialog_acts_dict['slot'] = slot
+                dialog_acts_dict['value'] = value
 
-                    init_state = False
+                # 방금 전에 추가한 리스트 내 dialog_acts 리스트에 append
+                result_json_list[appended_idx]['utters'][0]['dialog_acts'].append(dialog_acts_dict)
+                continue
 
-                    if session_id is not None:
-                        session = Session(session_id)  # create new session
-                        session.utters = []
 
-                # create utterance
-                utter = Utterance()
-                session.utters += [utter]
-                utter.dialog_acts = []
+            # 이전 row의 dialog-act
+            pre_dialog_act = dialog_act
 
-                utter.turn_index = turn_index
-                utter.topic = topic
-                utter.target_bio = target_bio
-                utter.speaker = speaker
-                utter.text = description
-                utter.semantic_tagged = semantic_tagged
 
-                if goal_label is not None:
-                    utter.goal_label = parse_goal_label(i, goal_label)
+            # 가장 중요하다고 생각되는 세가지 정보가 비어있는 행은 생략
+            if dialog_act == None and slot == None and value == None:
+                continue
 
-                utter.method = method
 
-                if requested is not None:
-                    utter.requested.append(requested)
 
-                dialog_act = DialogAct()
-                if act is None:
-                    continue
+            dialog_acts_dict['act'] = dialog_act
+            dialog_acts_dict['slot'] = slot
+            dialog_acts_dict['value'] = value
 
-                dialog_act.act = act
-                dialog_act.slot = slot
-                dialog_act.value = value
-                utter.dialog_acts += [dialog_act]
 
-            elif act is not None:
-                # just add additional dialog acts
-                if semantic_tagged is not None:
-                    utter.semantic_tagged = '%s %s' % (utter.semantic_tagged, semantic_tagged)  # concatenation
+            utters_dict['dialog_acts'] = [dialog_acts_dict]
+            utters_dict['semantic_tagged'] = ''
+            utters_dict['speaker'] = 'User'
+            utters_dict['target_bio'] = ''
+            utters_dict['text'] = user_speech
+            utters_dict['text_spaced'] = ''
+            utters_dict['topic'] = topic
+            utters_dict['turn_index'] = '1'
 
-                dialog_act = DialogAct()
-                dialog_act.act = act
-                dialog_act.slot = slot
-                dialog_act.value = value
-                utter.dialog_acts += [dialog_act]
+            unit_dict['session_id'] = ''
+            unit_dict['utters'] = [utters_dict]
 
-            else:
-                exception_lines += [i]
-                # print("exception line: %4d\t please check!!" % i)
-        except Exception as e:
-            print('line : ', i)
-            print(e)
-            exit()
+            result_json_list.append(unit_dict)
 
-    # end of for loop
-    print(("\ntotal sessions: %d" % len(sessions)))
+            # 방금 리스트에 append한 index
+            appended_idx = len(result_json_list) - 1
 
-    # convert to dictionary
-    converted = []
-    for session in sessions:
-        converted += [convert2dict(session)]
 
-    print(len(converted))
-    print(exception_lines)
-    # dump sessions
-    with open('schedule_corpus_ext2.json', 'w', encoding='utf-8') as wf:
-        data = json.dumps(converted, indent=4, sort_keys=True)
-        data = bytes(data, 'utf-8').decode('unicode_escape')
-        wf.write(data)
-        print("Saved corpus ext json file.")
+    result_json = json.dumps(result_json_list, indent=4, ensure_ascii=False, sort_keys=True)
+
+    f = open('result_json.json', 'w', encoding='utf-8')
+    f.write(result_json)
+    f.close()
+
+
+    # ==================================================================================================================
+
+
+    # Ontology시트 데이터 json파일 생성
+    ontology_dict = {}
+    sheet = wb['Ontology']
+    for col in range(0, 25290):
+
+        temp_list = []
+
+        if cell_value(1, col) == None:
+            break
+
+        for row in range(2, 25290):
+            if cell_value(row, col) == None:
+                break
+            temp_list.append(cell_value(row, col))
+
+        ontology_dict[cell_value(1,col)] = temp_list
+
+    ontology_json = json.dumps(ontology_dict, indent=4, ensure_ascii=False, sort_keys=True)
+
+    f = open('ontology_json.json', 'w', encoding='utf-8')
+    f.write(ontology_json)
+    f.close()
+
+
+
