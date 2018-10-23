@@ -199,6 +199,13 @@ if __name__ == '__main__':
         for row in range(2, 25290):
             if cell_value(row, col) == None:
                 break
+
+            # 공백을 포함한 ontology는 공백 제거한 것도 ontology 리스트에 추가시킨다.
+            if ' ' in cell_value(row, col):
+                temp_cell_value = cell_value(row, col).replace(' ', '')
+                if temp_cell_value not in temp_list:
+                    temp_list.append(temp_cell_value)
+
             temp_list.append(cell_value(row, col))
 
         ontology_dict[cell_value(1,col)] = temp_list

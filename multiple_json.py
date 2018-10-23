@@ -4,6 +4,8 @@ import copy
 import itertools
 
 
+
+
 with open('ontology_json.json', encoding='utf-8') as json_file:
     ontology_dict = json.load(json_file)
 
@@ -13,14 +15,13 @@ with open('result_json.json', encoding='utf-8') as json_file:
 
 
 
-#result_list_copy = copy.deepcopy(result_list)
 final_list = []
 
 for each_elem in result_json_list:
+
     each_utter = each_elem['utters'][0]
 
 
-    #i_idx = 0
     dialog_acts_list = each_utter['dialog_acts']
 
 
@@ -47,7 +48,6 @@ for each_elem in result_json_list:
     # slot-value의 가능한 모든 쌍 생성 (Cartesian Product)
     ontology_combs_list = list(itertools.product(*list_temp))
 
-    #text = each_utter['text']
 
 
     # slot-value의 가능한 모든 쌍에 대한 문장 생성 루프
@@ -63,8 +63,58 @@ for each_elem in result_json_list:
             if before == None:
                 continue
 
+            
+
             # 텍스트에서 새로운 value에 해당하는 단어를 찾아서 변경하고
             each_utter_copy['text'] = each_utter_copy['text'].replace(before, after)
+
+
+
+            afterword_len = len(after)
+            afterword_index = each_utter_copy['text'].find(after)
+
+            # after 단어 뒤에 나오는 조사의 시작 인덱스
+            after_afterword_idx = afterword_index + afterword_len
+
+            # after 단어 뒤에 나오는 문자
+            after_afterword = ''
+            # 공백 전까지가 조사에 해당하므로 after_afterword에 붙여준다.
+            for i in range(after_afterword_idx, len(each_utter_copy['text'])):
+                #if each_utter_copy['text'][i] == ' ':
+                if ord(each_utter_copy['text'][i]) < ord('가') or ord(each_utter_copy['text'][i]) > ord('힣'):
+                    break
+                after_afterword += each_utter_copy['text'][i]
+
+
+
+            code_point = ord(after[-1])
+            is_jongsung = (code_point - 44032) % 28
+
+            # 마지막 글자 받침 있는 명사 다음에 올 수 있는 조사 (메론을)
+            with_jongsung = ['이', '은', '으로', '을', '과', '이면']
+            # 마지막 글자 받침 없는 명사 다음에 올 수 있는 조사 (사과를)
+            without_jongsung = ['가', '는', '로', '를', '와', '면']
+
+
+            # value의 마지막 글자 받침 없음
+            if is_jongsung == 0:
+                if after_afterword in with_jongsung:
+                    idx = with_jongsung.index(after_afterword)
+                    correct_after_afterword = without_jongsung[idx]
+                    correct_text = each_utter_copy['text'][0:after_afterword_idx] + correct_after_afterword + each_utter_copy['text'][after_afterword_idx + len(after_afterword):]
+                    each_utter_copy['text'] = correct_text
+
+            # value의 마지막 글자 받침 있음
+            elif is_jongsung != 0:
+                if after_afterword in without_jongsung:
+                    idx = without_jongsung.index(after_afterword)
+                    correct_after_afterword = with_jongsung[idx]
+                    correct_text = each_utter_copy['text'][0:after_afterword_idx] + correct_after_afterword + each_utter_copy['text'][after_afterword_idx + len(after_afterword):]
+                    each_utter_copy['text'] = correct_text
+
+
+
+
             # dialog_acts의 value값도 같이 변경하자
             each_utter_copy['dialog_acts'][ontol_idx]['value'] = each_ontology
             ontol_idx += 1
@@ -132,7 +182,7 @@ for each_elem in result_json_list:
 
 
 
-pprint(final_list)
+#pprint(final_list)
 final_list_json = json.dumps(final_list, indent=4, ensure_ascii=False, sort_keys=True)
 
 
