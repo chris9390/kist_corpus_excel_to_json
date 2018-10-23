@@ -22,7 +22,7 @@ for each_elem in result_json_list:
     each_utter = each_elem['utters'][0]
 
 
-    dialog_acts_list = each_utter['dialog_acts']
+    dialog_acts = each_utter['dialog_acts']
 
 
     target_slots = {}
@@ -30,15 +30,15 @@ for each_elem in result_json_list:
     current_slots = []
     current_values = []
 
-    for i in dialog_acts_list:
-        if i['slot'] == None:
+    for dialog_act in dialog_acts:
+        if dialog_act['slot'] == None:
             continue
-        target_slots[i['slot']] = ontology_dict[i['slot']]
-        list_temp.append(ontology_dict[i['slot']])
+        target_slots[dialog_act['slot']] = ontology_dict[dialog_act['slot']]
+        list_temp.append(ontology_dict[dialog_act['slot']])
 
         # ontology_combs_list의 각 튜플의 인덱스의 ontology(slot) 종류
-        current_slots.append(i['slot'])
-        current_values.append(i['value'])
+        current_slots.append(dialog_act['slot'])
+        current_values.append(dialog_act['value'])
 
 
     if len(current_values) == 0:
