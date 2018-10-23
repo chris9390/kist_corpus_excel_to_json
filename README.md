@@ -1,6 +1,7 @@
 # KIST 로봇 코퍼스 처리를 위한 스크립트
 
 ## JSON 샘플 포맷
+### Corpus 포맷
 
     [
         {
@@ -44,7 +45,7 @@
     ...
     ]
   
-## Ontology JSON 포맷
+### Ontology 포맷
     {
         'date': [
             '오늘',
@@ -56,4 +57,23 @@
         ]
     ...
     }
+
+## WPM Decoder
+입력 텍스트를 Word Piece Model에 의해 새로 tokenize 하는 모듈. 아래와 같이 실행할 수 있다.
+
+```
+wpm = wpm_decoder('textDB.json')
+
+text = '내일 12시에 산책가기일정을 등록해줘'
+result = wpm.decode(text)
+
+print(result)
+
+```
+출력 결과는 아래와 같다.
+
+```
+_내일_ _1 2 시에_ _산책 가 기 일정을_ _등록 해줘_
+```
+
       
