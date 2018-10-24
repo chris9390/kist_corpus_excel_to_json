@@ -6,11 +6,11 @@ import itertools
 
 
 
-with open('ontology_json.json', encoding='utf-8') as json_file:
+with open('./json/ontology_json.json', encoding='utf-8') as json_file:
     ontology_dict = json.load(json_file)
 
 
-with open('result_json.json', encoding='utf-8') as json_file:
+with open('./json/result_json.json', encoding='utf-8') as json_file:
     result_json_list = json.load(json_file)
 
 
@@ -25,7 +25,7 @@ for each_elem in result_json_list:
     dialog_acts = each_utter['dialog_acts']
 
 
-    target_slots = {}
+    #target_slots = {}
     list_temp = []
     current_slots = []
     current_values = []
@@ -33,7 +33,7 @@ for each_elem in result_json_list:
     for dialog_act in dialog_acts:
         if dialog_act['slot'] == None:
             continue
-        target_slots[dialog_act['slot']] = ontology_dict[dialog_act['slot']]
+        #target_slots[dialog_act['slot']] = ontology_dict[dialog_act['slot']]
         list_temp.append(ontology_dict[dialog_act['slot']])
 
         # ontology_combs_list의 각 튜플의 인덱스의 ontology(slot) 종류
@@ -186,6 +186,6 @@ for each_elem in result_json_list:
 final_list_json = json.dumps(final_list, indent=4, ensure_ascii=False, sort_keys=True)
 
 
-with open('multiplied_json.json', 'w', encoding='utf-8') as f:
+with open('./json/multiplied_json.json', 'w', encoding='utf-8') as f:
     f.write(final_list_json)
 

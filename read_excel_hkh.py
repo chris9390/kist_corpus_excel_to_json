@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from openpyxl import load_workbook
-#from dialogue import *
 import json
 import re
 
@@ -81,6 +80,7 @@ def convert2dict(session):
 if __name__ == '__main__':
 
     sheet_list = ['소개', '정보 문의', '요청', '알림', '일정 문의', '대답', '대화']
+    #sheet_list = ['일정 문의']
 
     file = './excel/치매케어_사용자발화문_20181018_v3.xlsx'
     wb = load_workbook(filename=file)
@@ -98,7 +98,6 @@ if __name__ == '__main__':
     # 시트 순서대로 읽어들인다.
     for sheet_name in sheet_list:
 
-        #sheet = wb.get_sheet_by_name(sheet_name)
         sheet = wb[sheet_name]
 
         # read cells from excel
@@ -152,6 +151,44 @@ if __name__ == '__main__':
                 continue
 
 
+            # 현재 코퍼스에 있는 slot, value 값이 온톨로지에 있는지 확인하고 없으면 추가하는 단계
+            if slot != None and value != None:
+
+                is_exist_ont_header = 0
+                is_exist_ont_content = 0
+
+                # 온톨로지에 있는지 확인하기 위해 시트 이동
+                sheet = wb['Ontology']
+                for col in range(0, 25290):
+                    if cell_value(1, col) == None:
+                        new_col_idx = col
+                        break
+                    if cell_value(1, col) == slot:
+                        fit_col_idx = col
+                        is_exist_ont_header = 1
+                        for row in range(2, 25290):
+                            if cell_value(row, col) == None:
+                                new_row_idx = row
+                                break
+                            if cell_value(row, col) == value:
+                                is_exist_ont_content = 1
+                                break
+
+                # slot이 없는 경우
+                if is_exist_ont_header == 0:
+                    sheet.cell(row=1, column=new_col_idx+1).value = slot
+                    sheet.cell(row=2, column=new_col_idx+1).value = value
+                    wb.save(file)
+                # slot은 있는데 value가 없는 경우
+                elif is_exist_ont_header == 1:
+                    if is_exist_ont_content == 0:
+                        sheet.cell(row=new_row_idx, column=fit_col_idx+1).value = value
+                        wb.save(file)
+
+
+                # 다시 원래 시트로 복귀
+                sheet = wb[sheet_name]
+
 
             dialog_acts_dict['act'] = dialog_act
             dialog_acts_dict['slot'] = slot
@@ -178,7 +215,7 @@ if __name__ == '__main__':
 
     result_json = json.dumps(result_json_list, indent=4, ensure_ascii=False, sort_keys=True)
 
-    f = open('result_json.json', 'w', encoding='utf-8')
+    f = open('./json/result_json.json', 'w', encoding='utf-8')
     f.write(result_json)
     f.close()
 
@@ -212,7 +249,7 @@ if __name__ == '__main__':
 
     ontology_json = json.dumps(ontology_dict, indent=4, ensure_ascii=False, sort_keys=True)
 
-    f = open('ontology_json.json', 'w', encoding='utf-8')
+    f = open('./json/ontology_json.json', 'w', encoding='utf-8')
     f.write(ontology_json)
     f.close()
 

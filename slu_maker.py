@@ -1,10 +1,10 @@
 import json
 
-with open('multiplied_json.json', encoding='utf-8') as json_file:
+with open('./json/multiplied_json.json', encoding='utf-8') as json_file:
     multiplied_list = json.load(json_file)
 
 
-f_seq_in = open('seq_in.txt', 'w', encoding='utf-8')
+f_seq_in = open('./slu/seq_in.txt', 'w', encoding='utf-8')
 
 
 for each_elem in multiplied_list:
