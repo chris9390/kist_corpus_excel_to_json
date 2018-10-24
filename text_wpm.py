@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     wpm = wpm_decoder(new_unitDB_file)
 
-    with open('multiplied_json.json', 'r', encoding='utf-8') as f:
+    with open('./json/multiplied_json.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
         for session in data:
@@ -52,7 +52,8 @@ if __name__ == '__main__':
                 semantic_tagged = turn['semantic_tagged']
                 dialog_acts = turn['dialog_acts']
 
-                result = wpm.decode(text)
+                #result = wpm.decode(text)
+                result = text
 
                 #
                 # '는'으로 끝나는 것
@@ -135,6 +136,9 @@ if __name__ == '__main__':
                         print('\n### Error : value not exist!')
                         print(session)
                         exit()
+
+                    act_label = dialog_act['act']
+
                     if dialog_act['value']:
                         if not act_label:
                             act_label = dialog_act['act']
@@ -143,11 +147,7 @@ if __name__ == '__main__':
                                 print('\n### Error : act is not same!')
                                 exit()
 
-                        # if dialog_act['value'] == 'dontcare':
-                        #     continue
-                        #
-                        # if dialog_act['value'] == '0개':
-                        #     continue
+
 
                         values = dialog_act['value'].split()
 
@@ -163,7 +163,11 @@ if __name__ == '__main__':
 
                             wpm_token_idx.append(token_idx)
 
+                        if result == '잡지 위치 위로 옮겼으니깐 기억해':
+                            a = 1
 
+                        if result == '잡지 위치 아래로 옮겼으니깐 기억해':
+                            b = 1
 
                         same_count = 0
                         has_sub_seq = False
@@ -171,6 +175,9 @@ if __name__ == '__main__':
                         bio_idx = []
                         total_space_count = 0
                         last_idx = 0
+
+                        # '위' 와 같은 한글자인 value에서 '위치' 같은 단어에 걸리는 것을 방지하기 위함
+                        not_value_list = ['위치']
 
                         value_no_space = ''.join(values)
                         for char in value_no_space:
@@ -184,7 +191,15 @@ if __name__ == '__main__':
                                     continue
 
                                 if char == wpm_char:
+
                                     char_idx = last_idx - total_space_count
+
+                                    # 현재 가리키고 있는 단어의 전체 토큰
+                                    cur_token = results[wpm_token_idx[char_idx]]
+
+                                    # value가 1글자인 경우 not_value_list에 있는 단어를 구성하면 안된다.
+                                    if len(value_no_space) == 1 and (cur_token in not_value_list):
+                                        continue
 
                                     if wpm_idx == 0:
                                         same_count += 1
@@ -204,6 +219,8 @@ if __name__ == '__main__':
                                     wpm_idx += k + 1
 
                                     if same_count == len(value_no_space): # value의 크기와 일치하는 갯수가 같은 경우에 대해서 처리
+                                        has_sub_seq = True
+                                        '''
                                         if len(wpm_string) == wpm_idx: # value가 문장 마지막에 등장하는 경우.
                                             has_sub_seq = True
                                         else:
@@ -211,6 +228,7 @@ if __name__ == '__main__':
                                                 has_sub_seq = False
                                             else:
                                                 has_sub_seq = True
+                                        '''
                                     break
 
                             if has_sub_seq:
@@ -246,15 +264,15 @@ if __name__ == '__main__':
                     exit()
 
 
-    with open('./seq.in', 'w', encoding='utf-8') as f:
+    with open('./slu/seq.in', 'w', encoding='utf-8') as f:
         for elem in seq_in_list:
             f.write(elem + '\n')
 
-    with open('./seq.out', 'w', encoding='utf-8') as f:
+    with open('./slu/seq.out', 'w', encoding='utf-8') as f:
         for elem in seq_out_list:
             f.write(elem + '\n')
 
-    with open('./label', 'w', encoding='utf-8') as f:
+    with open('./slu/label', 'w', encoding='utf-8') as f:
         for elem in act_list:
             f.write(elem + '\n')
 

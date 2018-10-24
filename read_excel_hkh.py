@@ -3,7 +3,8 @@ from openpyxl import load_workbook
 import json
 import re
 
-START_COLUMN_INDEX = 1 # openpyxl는 index 1 부터 시작함
+# openpyxl는 index 1 부터 시작함
+START_COLUMN_INDEX = 1
 
 not_all_none = False
 
@@ -176,14 +177,16 @@ if __name__ == '__main__':
 
                 # slot이 없는 경우
                 if is_exist_ont_header == 0:
-                    sheet.cell(row=1, column=new_col_idx+1).value = slot
-                    sheet.cell(row=2, column=new_col_idx+1).value = value
+                    sheet.cell(row=1, column=new_col_idx + START_COLUMN_INDEX).value = slot
+                    sheet.cell(row=2, column=new_col_idx + START_COLUMN_INDEX).value = value
                     wb.save(file)
+                    print('새로운 "' + slot + '" slot에 새로운 "' + value + '" value 추가')
                 # slot은 있는데 value가 없는 경우
                 elif is_exist_ont_header == 1:
                     if is_exist_ont_content == 0:
-                        sheet.cell(row=new_row_idx, column=fit_col_idx+1).value = value
+                        sheet.cell(row=new_row_idx, column=fit_col_idx + START_COLUMN_INDEX).value = value
                         wb.save(file)
+                        print('기존 "' + slot + '" slot에 새로운 "' + value + '" value 추가')
 
 
                 # 다시 원래 시트로 복귀

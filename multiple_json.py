@@ -16,6 +16,10 @@ with open('./json/result_json.json', encoding='utf-8') as json_file:
 
 
 final_list = []
+# 일단 기존에 있던 데이터 모두 저장
+for each_elem in result_json_list:
+    final_list.append(each_elem)
+
 
 for each_elem in result_json_list:
 
@@ -48,7 +52,8 @@ for each_elem in result_json_list:
     # slot-value의 가능한 모든 쌍 생성 (Cartesian Product)
     ontology_combs_list = list(itertools.product(*list_temp))
 
-
+    if each_utter['text'] == '물체 위치 탁자 위로 옮겼으니깐 기억해':
+        a = 1
 
     # slot-value의 가능한 모든 쌍에 대한 문장 생성 루프
     for each_ontology_pairs in ontology_combs_list:
@@ -63,10 +68,15 @@ for each_elem in result_json_list:
             if before == None:
                 continue
 
-            
+            # ==========================================================================
+            # 이 부분도 단순히 replace할게 아니라 한글자인 value일 때 안되는 단어를 걸러줘야함.
+            not_value_list = ['위치']
+            divide_text_by_space = each_utter_copy['text'].split(' ')
+
 
             # 텍스트에서 새로운 value에 해당하는 단어를 찾아서 변경하고
             each_utter_copy['text'] = each_utter_copy['text'].replace(before, after)
+            # ==========================================================================
 
 
 
@@ -139,46 +149,6 @@ for each_elem in result_json_list:
 
 
 
-
-
-
-    # =========================================================================================================
-    '''
-    for i in dialog_acts_list:
-        ontology_col_name = i['slot']
-        value = i['value']
-
-
-
-        if ontology_col_name != None:
-
-            if value == None:
-                continue
-
-            for ontology_elem in ontology_dict[ontology_col_name]:
-
-                # immutable객체속성으로 복사
-                each_utter_copy = copy.deepcopy(each_utter)
-
-                if ontology_elem == value:
-                    continue
-
-                # 디버깅용 코드
-                if len(dialog_acts_list) >= 2:
-                    a = 1
-
-                # 원본에서 ontology부분만 다양하게 replace해준다.
-                each_utter_copy['text'] = each_utter['text'].replace(value, ontology_elem)
-                each_utter_copy['dialog_acts'][i_idx]['value'] = ontology_elem
-
-                temp_dict = {}
-                temp_dict['session_id'] = ''
-                temp_dict['utters'] = [each_utter_copy]
-
-                result_list_copy.append(temp_dict)
-
-        i_idx += 1
-        '''
 
 
 
