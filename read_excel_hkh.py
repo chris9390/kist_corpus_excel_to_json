@@ -83,7 +83,7 @@ if __name__ == '__main__':
     sheet_list = ['소개', '정보 문의', '요청', '알림', '일정 문의', '대답', '대화']
     #sheet_list = ['일정 문의']
 
-    file = './excel/치매케어_사용자발화문_20181018_v3.xlsx'
+    file = './excel/치매케어_사용자발화문_20181025_v4.xlsx'
     wb = load_workbook(filename=file)
 
     exception_lines = []

@@ -2,6 +2,7 @@ from pprint import pprint
 import json
 import copy
 import itertools
+import re
 
 
 
@@ -52,8 +53,7 @@ for each_elem in result_json_list:
     # slot-value의 가능한 모든 쌍 생성 (Cartesian Product)
     ontology_combs_list = list(itertools.product(*list_temp))
 
-    if each_utter['text'] == '물체 위치 탁자 위로 옮겼으니깐 기억해':
-        a = 1
+
 
     # slot-value의 가능한 모든 쌍에 대한 문장 생성 루프
     for each_ontology_pairs in ontology_combs_list:
@@ -68,15 +68,35 @@ for each_elem in result_json_list:
             if before == None:
                 continue
 
-            # ==========================================================================
-            # 이 부분도 단순히 replace할게 아니라 한글자인 value일 때 안되는 단어를 걸러줘야함.
-            not_value_list = ['위치']
-            divide_text_by_space = each_utter_copy['text'].split(' ')
 
 
-            # 텍스트에서 새로운 value에 해당하는 단어를 찾아서 변경하고
-            each_utter_copy['text'] = each_utter_copy['text'].replace(before, after)
-            # ==========================================================================
+            # '위' 같이 1글자인 value인 경우 '위치' 같은 단어에 걸려버릴 수 있기 때문에 한번 더 체크
+            if len(before) == 1:
+                not_value_list = ['위치']
+                tokens = each_utter_copy['text'].split(' ')
+
+                wpm_token_idx = []
+                token_idx = 0
+                for char in each_utter_copy['text']:
+                    if char == ' ':
+                        wpm_token_idx.append('_')
+                        token_idx += 1
+                        continue
+
+                    wpm_token_idx.append(token_idx)
+
+
+                for i, char in enumerate(each_utter_copy['text']):
+                    if char == before:
+                        if tokens[wpm_token_idx[i]] not in not_value_list:
+                            tokens[wpm_token_idx[i]] = tokens[wpm_token_idx[i]].replace(before, after)
+                            each_utter_copy['text'] = ' '.join(tokens)
+
+
+            # 2글자 이상의 value인 경우는 그냥 replace
+            else:
+                # 텍스트에서 새로운 value에 해당하는 단어를 찾아서 변경하고
+                each_utter_copy['text'] = each_utter_copy['text'].replace(before, after)
 
 
 
